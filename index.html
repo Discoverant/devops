@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adroit Server Ops</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; padding: 2rem; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #334155; }
+        h1 { color: #5eead4; font-size: 1.5rem; }
+        .status { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; }
+        .status.ok { background: #065f46; color: #6ee7b7; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .card { background: #1e293b; border-radius: 0.75rem; padding: 1.5rem; border: 1px solid #334155; }
+        .card h2 { color: #5eead4; font-size: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .site-list { list-style: none; }
+        .site-list li { padding: 0.5rem 0; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+        .site-list li:last-child { border-bottom: none; }
+        .site-list a { color: #7dd3fc; text-decoration: none; }
+        .site-list a:hover { text-decoration: underline; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+        .doc-links a { display: block; color: #7dd3fc; text-decoration: none; padding: 0.5rem 0; border-bottom: 1px solid #334155; }
+        .doc-links a:hover { color: #fff; }
+        .doc-links a:last-child { border-bottom: none; }
+        .info-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #334155; }
+        .info-row:last-child { border-bottom: none; }
+        .label { color: #94a3b8; }
+        .value { color: #f1f5f9; font-family: monospace; }
+        .refresh { color: #64748b; font-size: 0.75rem; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🖥️ Adroit Server Operations</h1>
+        <span class="status ok">● Systems Operational</span>
+    </div>
+    <div class="grid">
+        <div class="card">
+            <h2>🌐 Live Sites</h2>
+            <ul class="site-list">
+                <li><a href="https://app.discoverant.com" target="_blank">app.discoverant.com</a> <span class="dot"></span></li>
+                <li><a href="https://dev.discoverant.com" target="_blank">dev.discoverant.com</a> <span class="dot"></span></li>
+                <li><a href="https://adroitdi.com" target="_blank">adroitdi.com</a> <span class="dot"></span></li>
+                <li><a href="https://poppyherring.com" target="_blank">poppyherring.com</a> <span class="dot"></span></li>
+                <li><a href="https://michellegormally.com" target="_blank">michellegormally.com</a> <span class="dot"></span></li>
+                <li><a href="https://cumbriatattooremoval.com" target="_blank">cumbriatattooremoval.com</a> <span class="dot"></span></li>
+                <li><a href="https://arthurlingard.com" target="_blank">arthurlingard.com</a> <span class="dot"></span></li>
+                <li><a href="https://richmond.arthurlingard.com" target="_blank">richmond.arthurlingard.com</a> <span class="dot"></span></li>
+            </ul>
+        </div>
+        <div class="card">
+            <h2>📚 Documentation</h2>
+            <div class="doc-links">
+                <a href="https://github.com/adroit-di" target="_blank">GitHub Repositories</a>
+                <a href="/docs/PORT_REGISTRY.md" target="_blank">Port Registry</a>
+                <a href="/docs/GITHUB_INVENTORY.md" target="_blank">GitHub Inventory</a>
+                <a href="/docs/WOBBLY_DOCUMENTATION.md" target="_blank">Wobbly Documentation</a>
+            </div>
+        </div>
+        <div class="card">
+            <h2>🖧 Server Info</h2>
+            <div class="info-row"><span class="label">Hostname</span><span class="value">lingard-OptiPlex-7060</span></div>
+            <div class="info-row"><span class="label">Public IP</span><span class="value">137.220.101.182</span></div>
+            <div class="info-row"><span class="label">Local IP</span><span class="value">192.168.1.101</span></div>
+            <div class="info-row"><span class="label">OS</span><span class="value">Ubuntu 22.04 LTS</span></div>
+            <div class="info-row"><span class="label">CPU</span><span class="value">12 cores</span></div>
+            <div class="info-row"><span class="label">RAM</span><span class="value">32GB</span></div>
+        </div>
+        <div class="card">
+            <h2>🐳 Docker Services</h2>
+            <ul class="site-list">
+                <li><span>discoverant-frontend</span> <span class="dot"></span></li>
+                <li><span>discoverant-backend</span> <span class="dot"></span></li>
+                <li><span>discoverant-db</span> <span class="dot"></span></li>
+                <li><span>adroit-chemistry-platform</span> <span class="dot"></span></li>
+            </ul>
+        </div>
+    </div>
+    <p class="refresh">Last updated: Static dashboard • For live status, SSH to server</p>
+</body>
+</html>
