@@ -95,3 +95,8 @@ Richard Lingard - richard@adroitdi.com
 
 ---
 *Adroit DI - 2026*
+
+## Family Sites
+| Site | Purpose |
+|------|---------|
+| thelingards.com | Family website / Events |

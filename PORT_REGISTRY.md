@@ -75,3 +75,9 @@ These ports are free for new services:
 | 5939 | TeamViewer | Remote support |
 | 8384 | Syncthing | File sync (local only) |
 | 22000 | Syncthing | File sync P2P |
+
+## Family Sites
+
+| Domain | Directory | Purpose |
+|--------|-----------|---------|
+| thelingards.com | /var/www/thelingards.com/html | Family website |
