@@ -1,0 +1,10 @@
+# === Generated security audit outputs (DO NOT COMMIT) ===
+attachments/
+audit_runs/
+SECURITY_AUDIT_SHA256SUMS.txt
+
+# === Local/editor noise ===
+*.tmp
+*.bak
+*.swp
+.DS_Store

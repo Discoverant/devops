@@ -1,170 +1,192 @@
-# Discoverant / Adroit DI Security Audit (Pre-Launch)
+# Security Audit Report
 
-**Date:** 2026-01-15
-**Environment:** Single live environment (Option 1)
-**Owner:** Discoverant / Adroit DI
-**Scope:** Host, network exposure, Nginx reverse proxy, Docker containers, secrets handling, immediate hardening actions
-**Audience:** Internal engineering and external partners/auditors
+- Timestamp (UTC): 2026-01-16T10:03:53Z
+- Host: lingard-OptiPlex-7060
+- Kernel: 6.8.0-90-generic
 
----
+## OS / Updates
+Distributor ID:	Ubuntu
+Description:	Ubuntu 22.04.5 LTS
+Release:	22.04
+Codename:	jammy
 
-## Executive summary
+Upgradable packages (summary):
+Listing...
+apparmor/jammy-updates 3.0.4-2ubuntu2.5 amd64 [upgradable from: 3.0.4-2ubuntu2.4]
+containerd.io/jammy 2.2.1-1~ubuntu.22.04~jammy amd64 [upgradable from: 2.2.0-2~ubuntu.22.04~jammy]
+docker-ce-cli/jammy 5:29.1.4-1~ubuntu.22.04~jammy amd64 [upgradable from: 5:29.1.1-1~ubuntu.22.04~jammy]
+docker-ce-rootless-extras/jammy 5:29.1.4-1~ubuntu.22.04~jammy amd64 [upgradable from: 5:29.1.1-1~ubuntu.22.04~jammy]
+docker-ce/jammy 5:29.1.4-1~ubuntu.22.04~jammy amd64 [upgradable from: 5:29.1.1-1~ubuntu.22.04~jammy]
+docker-compose-plugin/jammy 5.0.1-1~ubuntu.22.04~jammy amd64 [upgradable from: 2.40.3-1~ubuntu.22.04~jammy]
+docker-model-plugin/jammy 1.0.7-1~ubuntu.22.04~jammy amd64 [upgradable from: 1.0.2-1~ubuntu.22.04~jammy]
+gir1.2-nm-1.0/jammy-updates 1.36.6-0ubuntu2.2 amd64 [upgradable from: 1.36.6-0ubuntu2.1]
+libapparmor1/jammy-updates 3.0.4-2ubuntu2.5 amd64 [upgradable from: 3.0.4-2ubuntu2.4]
+libnm0/jammy-updates 1.36.6-0ubuntu2.2 amd64 [upgradable from: 1.36.6-0ubuntu2.1]
+network-manager-config-connectivity-ubuntu/jammy-updates,jammy-updates 1.36.6-0ubuntu2.2 all [upgradable from: 1.36.6-0ubuntu2.1]
+network-manager/jammy-updates 1.36.6-0ubuntu2.2 amd64 [upgradable from: 1.36.6-0ubuntu2.1]
+python3-attr/jammy-updates,jammy-updates 21.2.0-1ubuntu1 all [upgradable from: 21.2.0-1]
+snapd/jammy-updates 2.73+ubuntu22.04 amd64 [upgradable from: 2.72+ubuntu22.04]
+tailscale/unknown 1.92.5 amd64 [upgradable from: 1.90.9]
+teamviewer/stable 15.73.5 amd64 [upgradable from: 15.72.3]
+ubuntu-drivers-common/jammy-updates 1:0.9.6.2~0.22.04.10 amd64 [upgradable from: 1:0.9.6.2~0.22.04.8]
 
-This audit documents the current security posture of the pre-launch Discoverant deployment and the immediate hardening actions taken to reduce attack surface without changing architecture or availability. The environment is intentionally pre-launch and may be unauthenticated, so the priority is to prevent unintended public exposure of stateful services while preserving developer access and operational continuity.
+## UFW
+Status: active
+Logging: on (low)
+Default: deny (incoming), allow (outgoing), deny (routed)
+New profiles: skip
 
-**Key findings**
-- Public web access is served only via **Nginx on 80/443** for `app.discoverant.com`.
-- The application routes traffic internally:
-  - `https://app.discoverant.com/` -> frontend at `127.0.0.1:3100`
-  - `https://app.discoverant.com/api/` -> backend at `127.0.0.1:8000`
-- Docker publishes several service ports at the host level, which requires **host firewall enforcement** to prevent public access.
-- UFW was active but contained **contradictory ALLOW rules** that could override intended DENY rules for sensitive ports.
+To                         Action      From
+--                         ------      ----
+3001                       ALLOW IN    192.168.1.0/24            
+443/tcp                    ALLOW IN    Anywhere                  
+80/tcp                     ALLOW IN    Anywhere                  
+5432                       DENY IN     Anywhere                  
+6379                       DENY IN     Anywhere                  
+9200                       DENY IN     Anywhere                  
+9201/tcp                   DENY IN     Anywhere                  
+8081/tcp                   ALLOW IN    192.168.1.0/24            
+6432/tcp                   DENY IN     Anywhere                  
+3000/tcp                   DENY IN     Anywhere                  
+8080/tcp                   DENY IN     Anywhere                  
+3389/tcp                   DENY IN     Anywhere                  
+22/tcp                     ALLOW IN    192.168.1.0/24            
+5432 (v6)                  DENY IN     Anywhere (v6)             
+6379 (v6)                  DENY IN     Anywhere (v6)             
+9201/tcp (v6)              DENY IN     Anywhere (v6)             
+6432/tcp (v6)              DENY IN     Anywhere (v6)             
+3000/tcp (v6)              DENY IN     Anywhere (v6)             
+8080/tcp (v6)              DENY IN     Anywhere (v6)             
+3389/tcp (v6)              DENY IN     Anywhere (v6)             
+9200/tcp (v6)              DENY IN     Anywhere (v6)             
+80/tcp (v6)                ALLOW IN    Anywhere (v6)             
+443/tcp (v6)               ALLOW IN    Anywhere (v6)             
 
-**Risk posture (pre-launch)**
-- Main risk: automated scanning or opportunistic access to open ports.
-- Acceptable risk: unauthenticated application access during pre-launch testing, provided infrastructure services are not publicly reachable.
 
----
+## Listening sockets
+Netid State  Recv-Q Send-Q                    Local Address:Port  Peer Address:PortProcess                                                                                                                                                                                                                                                                                                                                                                                                                                               
+udp   UNCONN 0      0                               0.0.0.0:48038      0.0.0.0:*    users:(("avahi-daemon",pid=737,fd=14)) uid:114 ino:13494 sk:3011 cgroup:/system.slice/avahi-daemon.service <->                                                                                                                                                                                                                                                                                                                                       
+udp   UNCONN 0      0                         192.168.122.1:53         0.0.0.0:*    users:(("dnsmasq",pid=3437,fd=5)) ino:15326 sk:3012 cgroup:/system.slice/libvirtd.service <->                                                                                                                                                                                                                                                                                                                                                        
+udp   UNCONN 0      0                         127.0.0.53%lo:53         0.0.0.0:*    users:(("systemd-resolve",pid=619,fd=13)) uid:101 ino:1937 sk:3013 cgroup:/system.slice/systemd-resolved.service <->                                                                                                                                                                                                                                                                                                                                 
+udp   UNCONN 0      0                        0.0.0.0%virbr0:67         0.0.0.0:*    users:(("dnsmasq",pid=3437,fd=3)) ino:15323 sk:3014 cgroup:/system.slice/libvirtd.service <->                                                                                                                                                                                                                                                                                                                                                        
+udp   UNCONN 0      0                               0.0.0.0:21027      0.0.0.0:*    users:(("syncthing",pid=980,fd=18)) uid:1000 ino:9796 sk:3015 cgroup:/system.slice/system-syncthing.slice/syncthing@lingard.service <->                                                                                                                                                                                                                                                                                                              
+udp   UNCONN 0      0                               0.0.0.0:5353       0.0.0.0:*    users:(("avahi-daemon",pid=737,fd=12)) uid:114 ino:13492 sk:3016 cgroup:/system.slice/avahi-daemon.service <->                                                                                                                                                                                                                                                                                                                                       
+udp   UNCONN 0      0                               0.0.0.0:41641      0.0.0.0:*    users:(("tailscaled",pid=887,fd=18)) ino:44538981 sk:36 fwmark:0x80000 cgroup:/system.slice/tailscaled.service <->                                                                                                                                                                                                                                                                                                                                   
+udp   UNCONN 0      0                               0.0.0.0:58509      0.0.0.0:*    users:(("syncthing",pid=980,fd=23)) uid:1000 ino:10987 sk:3018 cgroup:/system.slice/system-syncthing.slice/syncthing@lingard.service <->                                                                                                                                                                                                                                                                                                             
+udp   UNCONN 0      0      [fe80::cd02:52a5:4181:3fb4]%eno2:546           [::]:*    users:(("NetworkManager",pid=744,fd=33)) ino:16911 sk:3019 cgroup:/system.slice/NetworkManager.service v6only:1 <->                                                                                                                                                                                                                                                                                                                                  
+udp   UNCONN 0      0                                  [::]:21027         [::]:*    users:(("syncthing",pid=980,fd=19)) uid:1000 ino:12795 sk:301a cgroup:/system.slice/system-syncthing.slice/syncthing@lingard.service v6only:1 <->                                                                                                                                                                                                                                                                                                    
+udp   UNCONN 0      0                                  [::]:5353          [::]:*    users:(("avahi-daemon",pid=737,fd=13)) uid:114 ino:13493 sk:301b cgroup:/system.slice/avahi-daemon.service v6only:1 <->                                                                                                                                                                                                                                                                                                                              
+udp   UNCONN 0      0                                  [::]:55518         [::]:*    users:(("syncthing",pid=980,fd=17)) uid:1000 ino:12793 sk:301c cgroup:/system.slice/system-syncthing.slice/syncthing@lingard.service v6only:1 <->                                                                                                                                                                                                                                                                                                    
+udp   UNCONN 0      0                                  [::]:41641         [::]:*    users:(("tailscaled",pid=887,fd=17)) ino:44538980 sk:37 fwmark:0x80000 cgroup:/system.slice/tailscaled.service v6only:1 <->                                                                                                                                                                                                                                                                                                                          
+udp   UNCONN 0      0                                  [::]:42106         [::]:*    users:(("avahi-daemon",pid=737,fd=15)) uid:114 ino:13495 sk:301e cgroup:/system.slice/avahi-daemon.service v6only:1 <->                                                                                                                                                                                                                                                                                                                              
+tcp   LISTEN 0      128                           127.0.0.1:631        0.0.0.0:*    users:(("cupsd",pid=2493510,fd=7)) ino:44912238 sk:200a cgroup:/system.slice/cups.service <->                                                                                                                                                                                                                                                                                                                                                        
+tcp   LISTEN 0      4096                            0.0.0.0:5432       0.0.0.0:*    users:(("docker-proxy",pid=487726,fd=7)) ino:31246671 sk:300f cgroup:/system.slice/docker.service <->                                                                                                                                                                                                                                                                                                                                                
+tcp   LISTEN 0      4096                            0.0.0.0:5434       0.0.0.0:*    users:(("docker-proxy",pid=12599,fd=7)) ino:73880 sk:3 cgroup:/system.slice/docker.service <->                                                                                                                                                                                                                                                                                                                                                       
+tcp   LISTEN 0      4096                            0.0.0.0:6380       0.0.0.0:*    users:(("docker-proxy",pid=12706,fd=7)) ino:63048 sk:4 cgroup:/system.slice/docker.service <->                                                                                                                                                                                                                                                                                                                                                       
+tcp   LISTEN 0      4096                            0.0.0.0:6379       0.0.0.0:*    users:(("docker-proxy",pid=459300,fd=7)) ino:31024187 sk:5010 cgroup:/system.slice/docker.service <->                                                                                                                                                                                                                                                                                                                                                
+tcp   LISTEN 0      4096                            0.0.0.0:6432       0.0.0.0:*    users:(("docker-proxy",pid=1673011,fd=7)) ino:39170822 sk:a00a cgroup:/system.slice/docker.service <->                                                                                                                                                                                                                                                                                                                                               
+tcp   LISTEN 0      4096                      100.113.7.108:57537      0.0.0.0:*    users:(("tailscaled",pid=887,fd=22)) ino:8710 sk:6 cgroup:/system.slice/tailscaled.service <->                                                                                                                                                                                                                                                                                                                                                       
+tcp   LISTEN 0      4096                            0.0.0.0:8000       0.0.0.0:*    users:(("docker-proxy",pid=1838370,fd=7)) ino:40660607 sk:8016 cgroup:/system.slice/docker.service <->                                                                                                                                                                                                                                                                                                                                               
+tcp   LISTEN 0      2048                            0.0.0.0:8055       0.0.0.0:*    users:(("python",pid=862,fd=6)) uid:1000 ino:8644 sk:8 cgroup:/system.slice/birthday-api.service <->                                                                                                                                                                                                                                                                                                                                                 
+tcp   LISTEN 0      511                             0.0.0.0:80         0.0.0.0:*    users:(("nginx",pid=2054143,fd=8),("nginx",pid=2054142,fd=8),("nginx",pid=2054141,fd=8),("nginx",pid=2054140,fd=8),("nginx",pid=2054139,fd=8),("nginx",pid=2054138,fd=8),("nginx",pid=2054137,fd=8),("nginx",pid=2054136,fd=8),("nginx",pid=2054135,fd=8),("nginx",pid=2054134,fd=8),("nginx",pid=2054133,fd=8),("nginx",pid=2054132,fd=8),("nginx",pid=643821,fd=8)) ino:32339452 sk:30 cgroup:/system.slice/nginx.service <->                      
+tcp   LISTEN 0      100                             0.0.0.0:25         0.0.0.0:*    users:(("master",pid=2471369,fd=13)) ino:44825667 sk:1015 cgroup:/system.slice/system-postfix.slice/postfix@-.service <->                                                                                                                                                                                                                                                                                                                            
+tcp   LISTEN 0      128                             0.0.0.0:22         0.0.0.0:*    users:(("sshd",pid=919,fd=3)) ino:7739 sk:a cgroup:/system.slice/ssh.service <->                                                                                                                                                                                                                                                                                                                                                                     
+tcp   LISTEN 0      128                           127.0.0.1:5939       0.0.0.0:*    users:(("teamviewerd",pid=1295,fd=17)) ino:17433 sk:b cgroup:/system.slice/teamviewerd.service <->                                                                                                                                                                                                                                                                                                                                                   
+tcp   LISTEN 0      511                             0.0.0.0:443        0.0.0.0:*    users:(("nginx",pid=2054143,fd=9),("nginx",pid=2054142,fd=9),("nginx",pid=2054141,fd=9),("nginx",pid=2054140,fd=9),("nginx",pid=2054139,fd=9),("nginx",pid=2054138,fd=9),("nginx",pid=2054137,fd=9),("nginx",pid=2054136,fd=9),("nginx",pid=2054135,fd=9),("nginx",pid=2054134,fd=9),("nginx",pid=2054133,fd=9),("nginx",pid=2054132,fd=9),("nginx",pid=643821,fd=9)) ino:32339453 sk:31 cgroup:/system.slice/nginx.service <->                      
+tcp   LISTEN 0      2048                          127.0.0.1:8066       0.0.0.0:*    users:(("python",pid=1609710,fd=6)) uid:1000 ino:38597448 sk:35 cgroup:/system.slice/ops-monitor.service <->                                                                                                                                                                                                                                                                                                                                         
+tcp   LISTEN 0      4096                            0.0.0.0:3004       0.0.0.0:*    users:(("docker-proxy",pid=2863,fd=7)) ino:17821 sk:d cgroup:/system.slice/docker.service <->                                                                                                                                                                                                                                                                                                                                                        
+tcp   LISTEN 0      4096                            0.0.0.0:3000       0.0.0.0:*    users:(("docker-proxy",pid=11681,fd=7)) ino:60406 sk:e cgroup:/system.slice/docker.service <->                                                                                                                                                                                                                                                                                                                                                       
+tcp   LISTEN 0      4096                            0.0.0.0:3003       0.0.0.0:*    users:(("docker-proxy",pid=11991,fd=7)) ino:65159 sk:f cgroup:/system.slice/docker.service <->                                                                                                                                                                                                                                                                                                                                                       
+tcp   LISTEN 0      4096                            0.0.0.0:3002       0.0.0.0:*    users:(("docker-proxy",pid=12080,fd=7)) ino:68086 sk:10 cgroup:/system.slice/docker.service <->                                                                                                                                                                                                                                                                                                                                                      
+tcp   LISTEN 0      511                             0.0.0.0:3100       0.0.0.0:*    users:(("node",pid=1894761,fd=20)) uid:1000 ino:41195921 sk:b004 cgroup:/user.slice/user-1000.slice/session-495.scope <->                                                                                                                                                                                                                                                                                                                            
+tcp   LISTEN 0      4096                            0.0.0.0:3201       0.0.0.0:*    users:(("docker-proxy",pid=2918620,fd=7)) ino:19131573 sk:600c cgroup:/system.slice/docker.service <->                                                                                                                                                                                                                                                                                                                                               
+tcp   LISTEN 0      4096                          127.0.0.1:8384       0.0.0.0:*    users:(("syncthing",pid=980,fd=15)) uid:1000 ino:8673 sk:11 cgroup:/system.slice/system-syncthing.slice/syncthing@lingard.service <->                                                                                                                                                                                                                                                                                                                
+tcp   LISTEN 0      4096                      127.0.0.53%lo:53         0.0.0.0:*    users:(("systemd-resolve",pid=619,fd=14)) uid:101 ino:1938 sk:12 cgroup:/system.slice/systemd-resolved.service <->                                                                                                                                                                                                                                                                                                                                   
+tcp   LISTEN 0      4096                            0.0.0.0:9200       0.0.0.0:*    users:(("docker-proxy",pid=2834,fd=7)) ino:19654 sk:13 cgroup:/system.slice/docker.service <->                                                                                                                                                                                                                                                                                                                                                       
+tcp   LISTEN 0      32                        192.168.122.1:53         0.0.0.0:*    users:(("dnsmasq",pid=3437,fd=6)) ino:15327 sk:15 cgroup:/system.slice/libvirtd.service <->                                                                                                                                                                                                                                                                                                                                                          
+tcp   LISTEN 0      4096                               [::]:5432          [::]:*    users:(("docker-proxy",pid=487734,fd=7)) ino:31246672 sk:3010 cgroup:/system.slice/docker.service v6only:1 <->                                                                                                                                                                                                                                                                                                                                       
+tcp   LISTEN 0      4096                               [::]:5434          [::]:*    users:(("docker-proxy",pid=12606,fd=7)) ino:73881 sk:17 cgroup:/system.slice/docker.service v6only:1 <->                                                                                                                                                                                                                                                                                                                                             
+tcp   LISTEN 0      4096                                  *:22000            *:*    users:(("syncthing",pid=980,fd=14)) uid:1000 ino:15881 sk:18 cgroup:/system.slice/system-syncthing.slice/syncthing@lingard.service v6only:0 <->                                                                                                                                                                                                                                                                                                      
+tcp   LISTEN 0      4096                               [::]:6380          [::]:*    users:(("docker-proxy",pid=12713,fd=7)) ino:63049 sk:19 cgroup:/system.slice/docker.service v6only:1 <->                                                                                                                                                                                                                                                                                                                                             
+tcp   LISTEN 0      4096                               [::]:6379          [::]:*    users:(("docker-proxy",pid=459307,fd=7)) ino:31024188 sk:5012 cgroup:/system.slice/docker.service v6only:1 <->                                                                                                                                                                                                                                                                                                                                       
+tcp   LISTEN 0      4096                               [::]:6432          [::]:*    users:(("docker-proxy",pid=1673017,fd=7)) ino:39170823 sk:a00b cgroup:/system.slice/docker.service v6only:1 <->                                                                                                                                                                                                                                                                                                                                      
+tcp   LISTEN 0      4096                               [::]:8000          [::]:*    users:(("docker-proxy",pid=1838375,fd=7)) ino:40660608 sk:8017 cgroup:/system.slice/docker.service v6only:1 <->                                                                                                                                                                                                                                                                                                                                      
+tcp   LISTEN 0      511                                [::]:80            [::]:*    users:(("nginx",pid=2054143,fd=10),("nginx",pid=2054142,fd=10),("nginx",pid=2054141,fd=10),("nginx",pid=2054140,fd=10),("nginx",pid=2054139,fd=10),("nginx",pid=2054138,fd=10),("nginx",pid=2054137,fd=10),("nginx",pid=2054136,fd=10),("nginx",pid=2054135,fd=10),("nginx",pid=2054134,fd=10),("nginx",pid=2054133,fd=10),("nginx",pid=2054132,fd=10),("nginx",pid=643821,fd=10)) ino:32339454 sk:33 cgroup:/system.slice/nginx.service v6only:1 <->
+tcp   LISTEN 0      511                                [::]:443           [::]:*    users:(("nginx",pid=2054143,fd=11),("nginx",pid=2054142,fd=11),("nginx",pid=2054141,fd=11),("nginx",pid=2054140,fd=11),("nginx",pid=2054139,fd=11),("nginx",pid=2054138,fd=11),("nginx",pid=2054137,fd=11),("nginx",pid=2054136,fd=11),("nginx",pid=2054135,fd=11),("nginx",pid=2054134,fd=11),("nginx",pid=2054133,fd=11),("nginx",pid=2054132,fd=11),("nginx",pid=643821,fd=11)) ino:32339455 sk:34 cgroup:/system.slice/nginx.service v6only:1 <->
+tcp   LISTEN 0      128                               [::1]:631           [::]:*    users:(("cupsd",pid=2493510,fd=6)) ino:44912237 sk:200b cgroup:/system.slice/cups.service v6only:1 <->                                                                                                                                                                                                                                                                                                                                               
+tcp   LISTEN 0      2                                 [::1]:3350          [::]:*    users:(("xrdp-sesman",pid=907,fd=7)) ino:2946 sk:1f cgroup:/system.slice/xrdp-sesman.service v6only:1 <->                                                                                                                                                                                                                                                                                                                                            
+tcp   LISTEN 0      4096                               [::]:3004          [::]:*    users:(("docker-proxy",pid=2871,fd=7)) ino:17822 sk:20 cgroup:/system.slice/docker.service v6only:1 <->                                                                                                                                                                                                                                                                                                                                              
+tcp   LISTEN 0      4096                               [::]:3000          [::]:*    users:(("docker-proxy",pid=11688,fd=7)) ino:60407 sk:21 cgroup:/system.slice/docker.service v6only:1 <->                                                                                                                                                                                                                                                                                                                                             
+tcp   LISTEN 0      4096                               [::]:3003          [::]:*    users:(("docker-proxy",pid=11997,fd=7)) ino:65160 sk:22 cgroup:/system.slice/docker.service v6only:1 <->                                                                                                                                                                                                                                                                                                                                             
+tcp   LISTEN 0      4096                               [::]:3002          [::]:*    users:(("docker-proxy",pid=12087,fd=7)) ino:68087 sk:23 cgroup:/system.slice/docker.service v6only:1 <->                                                                                                                                                                                                                                                                                                                                             
+tcp   LISTEN 0      4096                               [::]:3201          [::]:*    users:(("docker-proxy",pid=2918627,fd=7)) ino:19131574 sk:600d cgroup:/system.slice/docker.service v6only:1 <->                                                                                                                                                                                                                                                                                                                                      
+tcp   LISTEN 0      2                                     *:3389             *:*    users:(("xrdp",pid=983,fd=11)) uid:132 ino:9800 sk:24 cgroup:/system.slice/xrdp.service v6only:0 <->                                                                                                                                                                                                                                                                                                                                                 
+tcp   LISTEN 0      4096         [fd7a:115c:a1e0::7801:783]:63352         [::]:*    users:(("tailscaled",pid=887,fd=23)) ino:8712 sk:25 cgroup:/system.slice/tailscaled.service v6only:1 <->                                                                                                                                                                                                                                                                                                                                             
+tcp   LISTEN 0      4096                               [::]:9200          [::]:*    users:(("docker-proxy",pid=2842,fd=7)) ino:19655 sk:26 cgroup:/system.slice/docker.service v6only:1 <->                                                                                                                                                                                                                                                                                                                                              
 
-## Architecture overview (as-built)
+## Fail2ban (if installed)
+fail2ban not active/installed
 
-### Host
-- Ubuntu 22.04 LTS
-- Nginx reverse proxy on host
-- Docker used for application and supporting services
+## Nginx config test (if installed)
 
-### Nginx reverse proxy routing
-- HTTP (80) redirects to HTTPS (443)
-- HTTPS (443) routes:
-  - `/api/` -> `http://127.0.0.1:8000/api/`
-  - `/` -> `http://127.0.0.1:3100`
+## External spot-check (nmap) (best-effort)
+Starting Nmap 7.80 ( https://nmap.org ) at 2026-01-16 10:03 GMT
+Nmap scan report for app.discoverant.com (137.220.101.182)
+Host is up (0.0011s latency).
+rDNS record for 137.220.101.182: 101.220.137.182.bcube.co.uk
 
-### Containerized services (representative)
-- **Backend API** (Python; FastAPI/Flask depending on component) on host port **8000** (should be private)
-- **Frontend** on host port **3100** (private; proxied by Nginx)
-- **PostgreSQL** on host port **5432** (must be private)
-- **Redis** on host port **6379** (must be private)
-- **PgBouncer** on host port **6432** (must be private)
-- **Elasticsearch (legacy)** on host port **9200** (must be private; disable if unused)
+PORT     STATE    SERVICE
+22/tcp   filtered ssh
+80/tcp   open     http
+443/tcp  open     https
+5432/tcp closed   postgresql
+9200/tcp closed   wap-wsp
+9201/tcp closed   wap-wsp-wtp
 
----
+Nmap done: 1 IP address (1 host up) scanned in 1.24 seconds
 
-## Network exposure
+## Docker (if installed)
+NAMES                       STATUS                  PORTS
+adroit-pgbouncer            Up 24 hours             5432/tcp, 0.0.0.0:6432->6432/tcp, [::]:6432->6432/tcp
+adroit-backend              Up 22 hours             0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
+adroit-postgres             Up 43 hours (healthy)   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+d608ecf44a94_adroit-redis   Up 43 hours (healthy)   0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
+chemistry-new-frontend      Up 2 days               0.0.0.0:3201->80/tcp, [::]:3201->80/tcp
+sdfe-frontend               Up 5 days               0.0.0.0:3000->80/tcp, [::]:3000->80/tcp
+adroit-elasticsearch        Up 5 days               0.0.0.0:9200->9200/tcp, [::]:9200->9200/tcp, 9300/tcp
+adroit-auth-proxy           Up 5 days               
+arthur-live                 Up 5 days               0.0.0.0:3004->3000/tcp, [::]:3004->3000/tcp
+wobbly-london-dev           Up 5 days (healthy)     0.0.0.0:3003->3000/tcp, [::]:3003->3000/tcp
+wobbly-london-prod          Up 5 days (healthy)     0.0.0.0:3002->3000/tcp, [::]:3002->3000/tcp
+wobbly-postgres             Up 5 days (healthy)     0.0.0.0:5434->5432/tcp, [::]:5434->5432/tcp
+wobbly-redis                Up 5 days (healthy)     0.0.0.0:6380->6379/tcp, [::]:6380->6379/tcp
 
-### Intended public exposure
-- 80/tcp (HTTP)
-- 443/tcp (HTTPS)
-- 22/tcp (SSH; temporary pre-launch requirement)
+## Disk usage
+Filesystem              Size  Used Avail Use% Mounted on
+tmpfs                   3.2G  3.7M  3.2G   1% /run
+/dev/nvme0n1p2          1.8T  150G  1.6T   9% /
+tmpfs                    16G     0   16G   0% /dev/shm
+tmpfs                   5.0M  4.0K  5.0M   1% /run/lock
+efivarfs                256K   85K  167K  34% /sys/firmware/efi/efivars
+tmpfs                    16G     0   16G   0% /run/qemu
+/dev/nvme0n1p1          511M  6.1M  505M   2% /boot/efi
+overlay                 1.8T  150G  1.6T   9% /var/lib/docker/rootfs/overlayfs/35ec6b4e4d33a9fa25b65931baf28b825ba906b92c1efc658a1877ec5907f369
+overlay                 1.8T  150G  1.6T   9% /var/lib/docker/rootfs/overlayfs/16bb2054dadb8bdc78f36a11ce9fa00de361108590ddbf452b29063dd3533c63
+overlay                 1.8T  150G  1.6T   9% /var/lib/docker/rootfs/overlayfs/81ef121a1890d945368ab1986d007f65e8d8d9ae23c272b073c95e10ad22f9f5
+//192.168.1.108/Public  3.6T  489G  3.1T  14% /mnt/nas
+tmpfs                   3.2G   92K  3.2G   1% /run/user/128
+overlay                 1.8T  150G  1.6T   9% /var/lib/docker/rootfs/overlayfs/b81728a82018acbcee90ae350c8071acddd2c3a8def364907af3745e671cedb7
+overlay                 1.8T  150G  1.6T   9% /var/lib/docker/rootfs/overlayfs/f1149d6fcb7e5190fa11d97317965434ed3a16344301591b41f49ab815af2c08
+overlay                 1.8T  150G  1.6T   9% /var/lib/docker/rootfs/overlayfs/82ae422a58284038bfbe4744372659e2f3807df3f3d6ec866f3af1c412353754
+overlay                 1.8T  150G  1.6T   9% /var/lib/docker/rootfs/overlayfs/4eddd6e5480f7ad88259f95bdaee7c70024d4ef520d6a88c37318d1505704cf4
+overlay                 1.8T  150G  1.6T   9% /var/lib/docker/rootfs/overlayfs/d88b184e45618741642376daecec510060d1f3d28cdacfb31288c247666cc3da
+tmpfs                   3.2G  100K  3.2G   1% /run/user/1000
+/dev/sdb3               1.9T  332G  1.5T  18% /mnt/usb-backup
+overlay                 1.8T  150G  1.6T   9% /var/lib/docker/rootfs/overlayfs/8cc4cd5629923e3461183ed0062bca6221985a134c564a10c3c4210de3b10a5e
+overlay                 1.8T  150G  1.6T   9% /var/lib/docker/rootfs/overlayfs/4add255f71a6c0c45213093bcc415dc00661e199b96fdf6ce2e180ff9ae3b90e
+overlay                 1.8T  150G  1.6T   9% /var/lib/docker/rootfs/overlayfs/d608ecf44a94ec830d48add210791978fd924a18f068fb4edf962935e9dbd412
+overlay                 1.8T  150G  1.6T   9% /var/lib/docker/rootfs/overlayfs/2e51135407ca2ea095774b51f265a2d987d6933bb11b96e23cfe0cc2f57d4c4b
+overlay                 1.8T  150G  1.6T   9% /var/lib/docker/rootfs/overlayfs/74ad2e8a61c4bfc121d9dfb18355fd53d586669c0dbd2a809f732c257d58f50c
 
-### Intended LAN-only exposure
-- 3001/tcp (dev/ops tooling)
-- 8081/tcp (dev/ops tooling)
+## Recent auth failures (last 50)
 
-### Intended private (not public)
-- 5432/tcp (PostgreSQL)
-- 6379/tcp (Redis)
-- 6432/tcp (PgBouncer)
-- 9200/tcp (Elasticsearch)
-- 3000/tcp (dev)
-- 8080/tcp (dev)
-- 3389/tcp (RDP)
-
-### UFW findings
-- UFW is active with default deny inbound.
-- Contradictory rules were present (e.g., DENY plus later ALLOW Anywhere), which **negates protection** for sensitive ports.
-- IPv6 ALLOW Anywhere rules for sensitive ports present similar risk if not removed.
-
-### Docker + UFW interaction
-- Docker publishes ports via `docker-proxy` and iptables rules.
-- Host listeners can show as `0.0.0.0:<port>` even when services are intended to be internal.
-- **UFW must be authoritative** for restricting inbound access to these ports.
-
----
-
-## Data stores and internal services
-
-### PostgreSQL
-- Must not be reachable from the public internet.
-- Access should be limited to:
-  - application containers on the Docker network
-  - localhost admin access when required
-  - LAN-only access only when explicitly needed
-
-### Redis
-- Not designed for public exposure; should be restricted to Docker network or localhost.
-
-### PgBouncer
-- Connection pooler for PostgreSQL.
-- Must be private; public exposure increases brute-force and credential stuffing risk.
-
-### Elasticsearch (legacy)
-- If unused, should be removed or unbound from host ports in a later maintenance window.
-- If required, enforce strict network isolation and authentication.
-
----
-
-## Authentication posture (pre-launch)
-
-- The application may be intentionally unauthenticated at this stage to support internal testing and rapid iteration.
-- This is acceptable **only if** infrastructure services are not publicly reachable and HTTP access is monitored.
-- Optional short-term controls (non-blocking):
-  - Nginx basic auth on `/` and/or `/api/`
-  - IP allow-list for partners or internal networks
-
----
-
-## Secrets handling
-
-- Secrets must **not** be committed to Git.
-- Expected secret types:
-  - Database URLs and credentials
-  - API keys
-  - Application secret keys (session/JWT)
-- Controls:
-  - `.env` files excluded from VCS
-  - Secret rotation before external launch
-  - Avoid default/demo credentials
-
----
-
-## Known risks and accepted risks
-
-### Known risks
-- Docker-published ports create host listeners that must be actively firewalled.
-- Pre-launch unauthenticated access could expose application behavior to scanning.
-- Legacy Elasticsearch exposure would be high risk if publicly reachable.
-
-### Accepted risks (pre-launch only)
-- Public access to the application UI/API without auth for controlled testing.
-- SSH (22/tcp) open to the public temporarily for operations.
-
----
-
-## Hardening actions completed
-
-- UFW rule rationalization to enforce intended public/LAN/private exposure.
-- Removal of contradictory ALLOW rules that negated DENY rules for sensitive ports.
-- Explicit DENY rules for PostgreSQL, Redis, PgBouncer, Elasticsearch, and common dev ports, including IPv6 where applicable.
-
----
-
-## Recommended next steps (non-breaking)
-
-**Immediate (today)**
-- Validate firewall exposure externally (e.g., from a non-LAN network).
-- Confirm IPv6 rules mirror IPv4 intentions.
-
-**Near term**
-- Remove unused Elasticsearch container or stop publishing 9200 to host.
-- Bind internal services to `127.0.0.1` where host access is needed; otherwise remove host port publishing.
-
-**Pre-beta**
-- Add a temporary auth wall (Nginx basic auth or IP allow-list).
-- Centralize secrets into managed storage and rotate pre-launch credentials.
-- Add rate limiting and request size limits on `/api/`.
-
----
-
-## Change log
-
-- **2026-01-15:** Rewrote audit, clarified exposure rules, and recorded firewall hardening outcomes for pre-launch.
