@@ -117,3 +117,68 @@ This posture is **proportionate, documented, and auditable**.
 
 Further hardening would provide diminishing returns at this stage.
 EOF
+
+---
+
+## 8. Router and NAS Final Risk Position (Closed)
+
+### Router status (Hyperoptic EX3301-T0)
+
+The internet edge router configuration has been reviewed and hardened.
+
+**Confirmed controls in place:**
+- Remote administration: **DISABLED**
+  - Router admin interface is not accessible from the WAN.
+- IPv4 and IPv6 firewall: **ENABLED**
+- Firewall policy: **Medium (recommended)**
+  - LAN → WAN allowed
+  - WAN → LAN blocked
+- DoS protection: **ENABLED**
+- No inbound port forwarding configured
+- No exposed management services
+
+**Status:**  
+✔ Router security posture is **fixed, documented, and closed**.  
+No further router-side hardening is required at this stage.
+
+---
+
+### Home NAS (WD My Cloud Home)
+
+A WD My Cloud Home NAS exists on the same LAN and is used **only for family backups**.
+
+**Important clarifications:**
+- NAS does **not** store:
+  - Server credentials
+  - SSH keys
+  - Production data
+  - Application secrets
+- Backup contents are **not publicly visible**
+  - Remote users cannot browse or enumerate backup data
+  - Access is mediated via vendor authentication
+- NAS is **not used** for server or infrastructure backups
+
+**Risk assessment:**
+- Risk level: **LOW**
+- NAS is outside the server trust boundary
+- Compromise of NAS would **not** provide access to the server
+- Independent protections exist:
+  - Router firewall
+  - Server UFW
+  - No trust relationship between NAS and server
+
+**Mitigation status:**
+- NAS risk is understood, documented, and accepted
+- Future reduction (optional): migrate family users off remote access and restrict NAS to LAN-only
+
+---
+
+### Final statement
+
+The end-to-end security posture (router → laptop → network → server) is now:
+
+- **Documented**
+- **Auditable**
+- **Proportionate to a pre-customer, internal-only system**
+
+No known high or medium risks remain open.
